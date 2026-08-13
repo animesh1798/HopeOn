@@ -80,16 +80,22 @@ export class RoomManager {
                   }
                 });
                 room.forEach((user_id) => {
-                  if (user_id != userId) {
-                    //@ts-ignore
-                    const { iceCandidate } = this.users.getUser(user_id);
-                    ws.send(
-                      JSON.stringify({
-                        type: "icecandidate",
-                        data: iceCandidate,
-                      }),
-                    );
-                  }
+                    if (user_id != userId) {
+                        //@ts-ignore
+                        const { iceCandidates } = this.users.getUser(user_id);
+                        if (!iceCandidates) {
+                            console.error("No IceCands")
+                            return
+                        }
+                        for (let iceCandidate in iceCandidates){
+                            ws.send(
+                            JSON.stringify({
+                                type: "icecandidate",
+                                data: iceCandidate,
+                            }),
+                            )
+                        }
+                    }
                 });          
             }
         }
