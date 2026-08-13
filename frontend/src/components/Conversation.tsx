@@ -19,6 +19,9 @@ const Conversation = ({socket}) => {
     const remoteStreamRef  = React.useRef<HTMLVideoElement>(null)
     const localStreamRef = React.useRef<HTMLVideoElement>(null)
 
+    const isPCReady = React.useRef<boolean>(false)
+    const pendingMessages = React.useRef<{type: string, data: any}[]>([])
+
     React.useEffect(()=>{
         if (!socket) return
 
@@ -28,30 +31,31 @@ const Conversation = ({socket}) => {
             console.log("received Message")
             const {type, data} = JSON.parse(event.data)
             console.log(JSON.parse(event.data))
+
+            if ((type === "offer" || type === "icecandidate") && !isPCReady.current) {
+                console.log(`Queuing ${type}, peerConnection not ready yet`)
+                pendingMessages.current.push({type, data})
+                return
+            }
+
             handleServerResponse(type, data)
     }
     }, [socket])
 
 
+    const drainQueue = async () => {
+        isPCReady.current = true
+        const queued = pendingMessages.current
+        pendingMessages.current = []
+        for (const msg of queued) {
+            await handleServerResponse(msg.type, msg.data)
+        }
+    }
+
     
     const makeRTCConnection = async (isInitiator: boolean) => {
         peerConnection = new RTCPeerConnection(stunServers)
-
-        localStream = await navigator.mediaDevices.getUserMedia({
-            audio: false,
-            video: true
-        })
-        localStream.getTracks().forEach((track) => {
-            peerConnection.addTrack(track, localStream)
-        })
-        localStreamRef.current.srcObject = localStream
-        console.log(localStreamRef.current.srcObject)
-
-        remoteStream = new MediaStream()
-        remoteStreamRef.current.srcObject = remoteStream
-        console.log(remoteStreamRef.current.srcObject)
-
-
+        
         peerConnection.ontrack = (event) => {
             console.log("RECEIEVED TRACK")
             event.streams[0].getTracks().forEach((track) => {
@@ -76,8 +80,20 @@ const Conversation = ({socket}) => {
         peerConnection.oniceconnectionstatechange = () => {
             console.log(peerConnection.connectionState)
         }
-        
 
+        localStream = await navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: true
+        })
+        localStream.getTracks().forEach((track) => {
+            peerConnection.addTrack(track, localStream)
+        })
+        localStreamRef.current.srcObject = localStream
+        console.log(localStreamRef.current.srcObject)
+
+        remoteStream = new MediaStream()
+        remoteStreamRef.current.srcObject = remoteStream
+        console.log(remoteStreamRef.current.srcObject)  
 
         console.log(isInitiator)
         if (isInitiator){
@@ -95,7 +111,7 @@ const Conversation = ({socket}) => {
                 }   
             }))
         }
-
+        await drainQueue()
     }
     
     const handleServerResponse = async (type: string, data: any) => {
@@ -123,6 +139,12 @@ const Conversation = ({socket}) => {
                 return
             }
             case "offer" : {
+                
+                if (!data) {
+                    console.warn("Received empty offer, ignoring")
+                    return
+                }
+                
                 const offer = data as RTCSessionDescriptionInit
                 console.log("OFFER:" , offer)
                 if (offer.type === "offer"){
@@ -156,8 +178,11 @@ const Conversation = ({socket}) => {
             case "icecandidate" : {
                 console.log("in ICE : ", data)
                 const icecandidate = data as RTCIceCandidateInit
-                await peerConnection.addIceCandidate(icecandidate)
-                console.log(icecandidate)
+                try {
+                    await peerConnection.addIceCandidate(icecandidate)
+                } catch (err) {
+                    console.error("Failed to add ICE candidate", err)
+                }
                 return
             }
             case "error" : {

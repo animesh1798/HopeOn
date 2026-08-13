@@ -70,6 +70,10 @@ export class RoomManager {
                     console.log("found receiver")
                     //@ts-ignore
                     const { offer } = this.users.getUser(user_id);
+                    if (!offer) {
+                      console.log("No offer yet from initiator, skipping send");
+                      return;
+                    }
                     console.log("Forwarding offer to ", userId)
                     ws.send(
                       JSON.stringify({
