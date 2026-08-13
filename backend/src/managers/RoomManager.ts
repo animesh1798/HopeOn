@@ -46,26 +46,56 @@ export class RoomManager {
                 const room = this.rooms.get(room_id)??[]
                 room.push(userId)
                 this.rooms.set(room_id, room)
-                return {
+
+                //If other users present check if there are any offers
+                
+                const isInitiator = room.length === 1
+                const newUserResponse = {
                   status: "success",
                   message: {
                     userId: userId,
                     roomId: room_id,
-                    isInitiator: room.length === 1,
+                    isInitiator,
                   },
                 };
+                ws.send(
+                  JSON.stringify({
+                    type: "login-response",
+                    data: newUserResponse,
+                  }),
+                );
+
+                !isInitiator && room.forEach((user_id) => {
+                  if (user_id !== userId) {
+                    console.log("found receiver")
+                    //@ts-ignore
+                    const { offer } = this.users.getUser(user_id);
+                    console.log("Forwarding offer to ", userId)
+                    ws.send(
+                      JSON.stringify({
+                        type: "offer",
+                        data: offer,
+                      }),
+                    );
+                  }
+                });          
             }
         }
     }
 
 
+
     handleIncomingOffer(offer: RTCSessionDescriptionInit, userId: string, roomId: string){
         if (!this.users.getUser(userId) || !this.rooms.get(roomId)) {
+            console.log("User : ", this.users.getUser(userId))
+            console.log("Room : ", this.rooms.get(roomId));
             return false
         }
         const offerResponse = this.users.setOffer(userId, offer)
+        
+        console.log("Trying to send offer")
         this.rooms.get(roomId)?.forEach((user_id) => {
-            if (user_id != userId) {
+            if (user_id !== userId) {
                 //@ts-ignore
                 const { ws } = this.users.getUser(user_id)
                 ws.send(JSON.stringify({

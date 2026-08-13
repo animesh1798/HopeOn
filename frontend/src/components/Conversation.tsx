@@ -1,7 +1,7 @@
 import React from 'react'
 
 let peerConnection : RTCPeerConnection;
-let remoteStream;
+let remoteStream : MediaStream;
 let localStream;
 
 const stunServers = {
@@ -14,15 +14,18 @@ const stunServers = {
 
 const Conversation = ({socket}) => {
 
-    const [userId, setUserId] = React.useState<string>("")
-    const [roomId, setRoomId] = React.useState<string>("")
+    const userId = React.useRef<string>("")
+    const roomId = React.useRef<string>("")
     const remoteStreamRef  = React.useRef<HTMLVideoElement>(null)
     const localStreamRef = React.useRef<HTMLVideoElement>(null)
 
     React.useEffect(()=>{
         if (!socket) return
 
+        console.log("socket working")
+
         socket.onmessage = (event) => {
+            console.log("received Message")
             const {type, data} = JSON.parse(event.data)
             console.log(JSON.parse(event.data))
             handleServerResponse(type, data)
@@ -31,22 +34,26 @@ const Conversation = ({socket}) => {
 
 
     
-    const makeRTCConnection = async (userId : string, roomId : string, isInitiator: boolean) => {
+    const makeRTCConnection = async (isInitiator: boolean) => {
         peerConnection = new RTCPeerConnection(stunServers)
 
         localStream = await navigator.mediaDevices.getUserMedia({
-            audio: true,
+            audio: false,
             video: true
         })
         localStream.getTracks().forEach((track) => {
             peerConnection.addTrack(track, localStream)
         })
         localStreamRef.current.srcObject = localStream
+        console.log(localStreamRef.current.srcObject)
 
         remoteStream = new MediaStream()
         remoteStreamRef.current.srcObject = remoteStream
+        console.log(remoteStreamRef.current.srcObject)
+
 
         peerConnection.ontrack = (event) => {
+            console.log("RECEIEVED TRACK")
             event.streams[0].getTracks().forEach((track) => {
                 remoteStream.addTrack(track)
             })
@@ -59,22 +66,30 @@ const Conversation = ({socket}) => {
                     type: "icecandidate",
                     data : {
                         iceCandidate : event.candidate,
-                        userId: userId,
-                        roomId: roomId
+                        userId: userId.current,
+                        roomId: roomId.current
                     }
                 }))
             }
         }
+        peerConnection.oniceconnectionstatechange = () => {
+            console.log(peerConnection.connectionState)
+        }
         
+
+
+        console.log(isInitiator)
         if (isInitiator){
+            console.log("sending offer")
             const offer = await peerConnection.createOffer()
             await peerConnection.setLocalDescription(offer)
-
+            console.log(offer.sdp)
+            console.log(userId.current, roomId.current)
             socket.send(JSON.stringify({
                 type: "offer",
                 data: {
-                    roomId,
-                    userId,
+                    roomId: roomId.current,
+                    userId: userId.current,
                     offer
                 }   
             }))
@@ -90,13 +105,13 @@ const Conversation = ({socket}) => {
                     console.log(data)
                 }
                 else if (data instanceof Object) {
-                    const { userId, roomId, isInitiator } = data
+    
+                    const {message} = data
+                    userId.current = message.userId
+                    roomId.current = message.roomId
 
-                    setUserId(userId)
-                    setRoomId(roomId)
-
-                    await makeRTCConnection(userId, roomId, isInitiator)
-                    console.log(userId, roomId)
+                    await makeRTCConnection( message.isInitiator)
+                    console.log(userId.current, roomId.current)
 
                 }
                 return
@@ -108,20 +123,25 @@ const Conversation = ({socket}) => {
             }
             case "offer" : {
                 const offer = data as RTCSessionDescriptionInit
+                console.log("OFFER:" , offer)
                 if (offer.type === "offer"){
+                    console.log("Received offer")
                     await peerConnection.setRemoteDescription(offer)
                     const answer = await peerConnection.createAnswer()
+                    console.log(answer.sdp)
+                    
                     await peerConnection.setLocalDescription(answer)
                     socket.send(JSON.stringify({
                         type: "answer",
                         data : {
-                            userId,
-                            roomId, 
+                            userId: userId.current,
+                            roomId: roomId.current, 
                             offer: answer
                         }
                     }))
                 }
-                else if (offer.type === 'answer') {
+                else if (offer.type === "answer") {
+                    console.log("Received answer")
                     await peerConnection.setRemoteDescription(offer)
                 }
                 console.log(`${offer.type} : `, offer)
@@ -133,6 +153,7 @@ const Conversation = ({socket}) => {
                 return
             }
             case "icecandidate" : {
+                console.log("in ICE : ", data)
                 const icecandidate = data as RTCIceCandidateInit
                 await peerConnection.addIceCandidate(icecandidate)
                 console.log(icecandidate)
@@ -147,8 +168,12 @@ const Conversation = ({socket}) => {
 
     return (
         <>
-            <video className="local-stream" ref={localStreamRef}></video>        
-            <video className="remote-stream" ref={remoteStreamRef}></video>        
+            <div className="videoplayer h-3/5 w-4/5 bg-black mt-10">
+            <video className="local-stream" ref={localStreamRef} playsInline autoPlay></video>        
+            </div>
+            <div className="videoplayer h-3/5 w-4/5 bg-black mt-10">
+            <video className="remote-stream" ref={remoteStreamRef} playsInline autoPlay></video> 
+            </div>
         </>
     )
 

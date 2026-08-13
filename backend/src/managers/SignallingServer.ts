@@ -18,21 +18,18 @@ export class SignallingServer {
             ws.on ("message", async (rawData) => {
                 
                 const {type, data} = JSON.parse(rawData.toString())
-                console.log(rawData.toString())
 
                 switch (type) {
                     case "join" :
                     case "newuser" : {
                         console.log(`${type} request recvd`)
                         const {userName, roomId} = data;
-                        const newUserResponse = this.rooms.handleIncomingUser(userName, ws, roomId)
-                        return ws.send(JSON.stringify({
-                            type: "login-response",
-                            data: newUserResponse
-                        }))
+                        this.rooms.handleIncomingUser(userName, ws, roomId)
+                        return
                     }
                     case "offer" : 
                     case "answer" : {
+                        console.log(type, data)
                         const roomId = data.roomId
                         const userId = data.userId
                         const offer = data.offer
