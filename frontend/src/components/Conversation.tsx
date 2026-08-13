@@ -31,7 +31,7 @@ const Conversation = ({socket}) => {
 
 
     
-    const makeRTCConnection = async (userId : string, roomId : string, isinitiator: boolean) => {
+    const makeRTCConnection = async (userId : string, roomId : string, isInitiator: boolean) => {
         peerConnection = new RTCPeerConnection(stunServers)
 
         localStream = await navigator.mediaDevices.getUserMedia({
@@ -66,7 +66,7 @@ const Conversation = ({socket}) => {
             }
         }
         
-        if (isinitiator){
+        if (isInitiator){
             const offer = await peerConnection.createOffer()
             await peerConnection.setLocalDescription(offer)
 
@@ -90,12 +90,12 @@ const Conversation = ({socket}) => {
                     console.log(data)
                 }
                 else if (data instanceof Object) {
-                    const { userId, roomId, isinitiator } = data
+                    const { userId, roomId, isInitiator } = data
 
                     setUserId(userId)
                     setRoomId(roomId)
 
-                    await makeRTCConnection(userId, roomId, isinitiator)
+                    await makeRTCConnection(userId, roomId, isInitiator)
                     console.log(userId, roomId)
 
                 }
@@ -108,7 +108,7 @@ const Conversation = ({socket}) => {
             }
             case "offer" : {
                 const offer = data as RTCSessionDescriptionInit
-                if (offer.type === "offer" || offer.type === "answer"){
+                if (offer.type === "offer"){
                     await peerConnection.setRemoteDescription(offer)
                     const answer = await peerConnection.createAnswer()
                     await peerConnection.setLocalDescription(answer)
@@ -121,7 +121,9 @@ const Conversation = ({socket}) => {
                         }
                     }))
                 }
-
+                else if (offer.type === 'answer') {
+                    await peerConnection.setRemoteDescription(offer)
+                }
                 console.log(`${offer.type} : `, offer)
                 return
             }
