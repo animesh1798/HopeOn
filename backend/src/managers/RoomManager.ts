@@ -78,6 +78,18 @@ export class RoomManager {
                       }),
                     );
                   }
+                });
+                room.forEach((user_id) => {
+                  if (user_id != userId) {
+                    //@ts-ignore
+                    const { iceCandidate } = this.users.getUser(user_id);
+                    ws.send(
+                      JSON.stringify({
+                        type: "icecandidate",
+                        data: iceCandidate,
+                      }),
+                    );
+                  }
                 });          
             }
         }
@@ -111,6 +123,9 @@ export class RoomManager {
         if (!iceCandidate || !userId || !roomId || !this.users.getUser(userId) || !this.rooms.get(roomId)) {
             return "Failed to Send ICE"
         }
+
+        this.users.setIce(userId, iceCandidate)
+
         this.rooms.get(roomId)?.forEach((user_id) => {
             if (user_id != userId) {
               //@ts-ignore
