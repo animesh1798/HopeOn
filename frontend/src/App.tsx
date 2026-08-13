@@ -6,13 +6,13 @@ import Conversation from './components/Conversation'
 const App = () => {
 
   const [socket, setSocket] = React.useState<WebSocket|null>(null)
-
+  const [name, setName] = React.useState<string>("")
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path='/' element={<WelcomePage socket={socket} setSocket={setSocket}/>} />
-        <Route path='/conversation' element ={<Conversation socket={socket} />} />
+        <Route path='/' element={<WelcomePage socket={socket} setSocket={setSocket} name={name} setName={setName}/>} />
+        <Route path='/conversation' element ={<Conversation socket={socket} name={name} />} />
       </Routes>
     </BrowserRouter>
   )

@@ -86,7 +86,7 @@ export class RoomManager {
                 room.forEach((user_id) => {
                     if (user_id != userId) {
                         //@ts-ignore
-                        const { iceCandidates } = this.users.getUser(user_id);
+                        const { iceCandidates, userName } = this.users.getUser(user_id);
                         if (!iceCandidates) {
                             console.error("No IceCands")
                             return
@@ -96,6 +96,7 @@ export class RoomManager {
                             JSON.stringify({
                                 type: "icecandidate",
                                 data: iceCandidate,
+                                userName,
                             }),
                             )
                         }
@@ -139,11 +140,12 @@ export class RoomManager {
         this.rooms.get(roomId)?.forEach((user_id) => {
             if (user_id != userId) {
               //@ts-ignore
-              const { ws } = this.users.getUser(user_id);
+              const { ws, userName } = this.users.getUser(user_id);
               ws.send(
                 JSON.stringify({
                   type: "icecandidate",
                   data: iceCandidate,
+                  userName
                 }),
               );
             }

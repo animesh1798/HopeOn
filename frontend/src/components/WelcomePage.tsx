@@ -1,10 +1,10 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const WelcomePage = ({socket, setSocket}) => {
+const WelcomePage = ({socket, setSocket, name, setName}) => {
 
     const [currentTab, setCurrentTab] = React.useState<"newuser" | "join">("newuser")
-    const [name, setName] = React.useState<string>("")
+    
     const [roomId, setRoomId] = React.useState<string>("")
     const [joining, setJoining] = React.useState<boolean>(false)
     const navigate = useNavigate()

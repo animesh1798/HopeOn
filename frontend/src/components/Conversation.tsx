@@ -12,8 +12,9 @@ const stunServers = {
     ]
 }
 
-const Conversation = ({socket}) => {
+const Conversation = ({socket, name}) => {
 
+    const [peerName, setPeerName] = React.useState<string>("")
     const userId = React.useRef<string>("")
     const roomId = React.useRef<string>("")
     const remoteStreamRef  = React.useRef<HTMLVideoElement>(null)
@@ -36,6 +37,10 @@ const Conversation = ({socket}) => {
                 console.log(`Queuing ${type}, peerConnection not ready yet`)
                 pendingMessages.current.push({type, data})
                 return
+            }
+
+            if (type === "icecandidate") {
+                setPeerName(JSON.parse(event.data).userName)
             }
 
             handleServerResponse(type, data)
@@ -194,10 +199,12 @@ const Conversation = ({socket}) => {
 
     return (
         <>
-            <div className="videoplayer h-3/5 w-4/5 bg-black mt-10">
+            <div className="videoplayer h-3/5 w-4/5 bg-black mt-10 overflow-auto text-white text-2xl font-bold">
+            {name}
             <video className="local-stream" ref={localStreamRef} playsInline autoPlay></video>        
             </div>
-            <div className="videoplayer h-3/5 w-4/5 bg-black mt-10">
+            <div className="videoplayer h-3/5 w-4/5 bg-black mt-10 overflow-auto text-white text-2xl font-bold">
+            {peerName}
             <video className="remote-stream" ref={remoteStreamRef} playsInline autoPlay></video> 
             </div>
         </>
