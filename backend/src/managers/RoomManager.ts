@@ -87,7 +87,7 @@ export class RoomManager {
                             console.error("No IceCands")
                             return
                         }
-                        for (let iceCandidate in iceCandidates){
+                        for (let iceCandidate of iceCandidates){
                             ws.send(
                             JSON.stringify({
                                 type: "icecandidate",
