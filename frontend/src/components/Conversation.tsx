@@ -62,6 +62,7 @@ const Conversation = ({socket}) => {
         
         peerConnection.onicecandidate = async (event) => {
             if (event.candidate) {
+                console.log("sending ice candidate")
                 socket.send(JSON.stringify({
                     type: "icecandidate",
                     data : {
