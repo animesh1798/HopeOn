@@ -31,7 +31,7 @@ const Conversation = ({socket}) => {
 
 
     
-    const makeRTCConnection = async (userId : string, roomId : string) => {
+    const makeRTCConnection = async (userId : string, roomId : string, isinitiator: boolean) => {
         peerConnection = new RTCPeerConnection(stunServers)
 
         localStream = await navigator.mediaDevices.getUserMedia({
@@ -66,19 +66,19 @@ const Conversation = ({socket}) => {
             }
         }
         
-        const offer = await peerConnection.createOffer()
-        await peerConnection.setLocalDescription(offer)
+        if (isinitiator){
+            const offer = await peerConnection.createOffer()
+            await peerConnection.setLocalDescription(offer)
 
-        socket.send(JSON.stringify({
-            type: "offer",
-            data: {
-                roomId,
-                userId,
-                offer
-            }
-        }))
-
-        
+            socket.send(JSON.stringify({
+                type: "offer",
+                data: {
+                    roomId,
+                    userId,
+                    offer
+                }   
+            }))
+        }
 
     }
     
@@ -90,12 +90,12 @@ const Conversation = ({socket}) => {
                     console.log(data)
                 }
                 else if (data instanceof Object) {
-                    const { userId, roomId } = data
+                    const { userId, roomId, isinitiator } = data
 
                     setUserId(userId)
                     setRoomId(roomId)
 
-                    await makeRTCConnection(userId, roomId)
+                    await makeRTCConnection(userId, roomId, isinitiator)
                     console.log(userId, roomId)
 
                 }

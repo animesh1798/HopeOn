@@ -47,8 +47,13 @@ export class RoomManager {
                 room.push(userId)
                 this.rooms.set(room_id, room)
                 return {
-                    status: "success",
-                    message: {userId: userId, roomId: room_id}}
+                  status: "success",
+                  message: {
+                    userId: userId,
+                    roomId: room_id,
+                    isInitiator: room.length === 1,
+                  },
+                };
             }
         }
     }
