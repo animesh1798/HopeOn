@@ -140,12 +140,12 @@ export class RoomManager {
         this.rooms.get(roomId)?.forEach((user_id) => {
             if (user_id != userId) {
               //@ts-ignore
-              const { ws, userName } = this.users.getUser(user_id);
+              const { ws } = this.users.getUser(user_id);
               ws.send(
                 JSON.stringify({
                   type: "icecandidate",
                   data: iceCandidate,
-                  userName
+                  userName : this.users.getUser(userId)?.userName
                 }),
               );
             }

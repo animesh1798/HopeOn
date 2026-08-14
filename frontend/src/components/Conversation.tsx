@@ -12,7 +12,7 @@ const stunServers = {
     ]
 }
 
-const Conversation = ({socket, name}) => {
+const Conversation = ({socket, name} : {socket: WebSocket, name: string}) => {
 
     const [peerName, setPeerName] = React.useState<string>("")
     const userId = React.useRef<string>("")
@@ -33,18 +33,25 @@ const Conversation = ({socket, name}) => {
             const {type, data} = JSON.parse(event.data)
             console.log(JSON.parse(event.data))
 
+            if (type === "icecandidate")
+                setPeerName(JSON.parse(event.data).userName) 
+            
             if ((type === "offer" || type === "icecandidate") && !isPCReady.current) {
                 console.log(`Queuing ${type}, peerConnection not ready yet`)
                 pendingMessages.current.push({type, data})
                 return
             }
 
-            if (type === "icecandidate") {
-                setPeerName(JSON.parse(event.data).userName)
-            }
+            
 
             handleServerResponse(type, data)
     }
+
+    // return () => socket.close(2000, JSON.stringify({
+    //     roomId,
+    //     userId
+    // }))
+
     }, [socket])
 
 
@@ -199,13 +206,21 @@ const Conversation = ({socket, name}) => {
 
     return (
         <>
+            <span>{`YOU: ${name}`}</span>
+            
+            
             <div className="videoplayer h-3/5 w-4/5 bg-black mt-10 overflow-auto text-white text-2xl font-bold">
-            {name}
-            <video className="local-stream" ref={localStreamRef} playsInline autoPlay></video>        
+                
+                <video className="local-stream" ref={localStreamRef} playsInline autoPlay>
+                    
+                </video>        
             </div>
+            
+            
+            <span>{`Peer: ${peerName}`}</span>
             <div className="videoplayer h-3/5 w-4/5 bg-black mt-10 overflow-auto text-white text-2xl font-bold">
-            {peerName}
-            <video className="remote-stream" ref={remoteStreamRef} playsInline autoPlay></video> 
+                <video className="remote-stream" ref={remoteStreamRef} playsInline autoPlay>   
+                </video> 
             </div>
         </>
     )

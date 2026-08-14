@@ -64,6 +64,7 @@ export class SignallingServer {
             
            ws.on("close", (code: number, rawData) => {
             const {roomId, userId} = JSON.parse(rawData.toString())
+            console.log(roomId, userId)
             this.rooms.remove(roomId, userId)
            })
 

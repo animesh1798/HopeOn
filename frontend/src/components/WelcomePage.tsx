@@ -26,7 +26,6 @@ const WelcomePage = ({socket, setSocket, name, setName}) => {
             }))
             console.log("Data Sent")
             setJoining(false)
-            setName("")
             setRoomId("")
         }
         
