@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+<rect width="1440" height="900" fill="#f8fafc"/>
+<rect x="500" y="170" width="440" height="560" rx="28" fill="white" stroke="#e2e8f0" stroke-width="2"/>
+<g font-family="Arial, sans-serif"><rect x="605" y="220" width="44" height="44" rx="14" fill="#2563eb"/><text x="627" y="249" text-anchor="middle" font-size="20" font-weight="700" fill="white">H</text><text x="665" y="244" font-size="30" font-weight="800" fill="#0f172a">HopeOn</text><text x="665" y="264" font-size="13" fill="#64748b">Real-time peer-to-peer video calls</text>
+<rect x="540" y="310" width="360" height="54" rx="16" fill="#f1f5f9" stroke="#e2e8f0"/><rect x="546" y="316" width="172" height="42" rx="12" fill="white"/><text x="632" y="342" text-anchor="middle" font-size="14" font-weight="700" fill="#2563eb">New Meeting</text><text x="810" y="342" text-anchor="middle" font-size="14" font-weight="700" fill="#475569">Join Room</text>
+<text x="542" y="410" font-size="12" font-weight="700" fill="#475569">YOUR NAME</text><rect x="540" y="425" width="360" height="52" rx="12" fill="#f8fafc" stroke="#cbd5e1"/><text x="558" y="457" font-size="15" fill="#94a3b8">e.g. Alex</text>
+<rect x="540" y="520" width="360" height="56" rx="12" fill="#2563eb"/><text x="720" y="554" text-anchor="middle" font-size="15" font-weight="700" fill="white">Start Meeting  →</text>
+<text x="720" y="648" text-anchor="middle" font-size="13" fill="#94a3b8">Create a room and share the generated code</text></g></svg>
