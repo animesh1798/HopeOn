@@ -27,7 +27,9 @@ export class RoomManager {
     }    
 
     handleIncomingUser (userName: string,  ws: WebSocket, roomId?: string){
+        
         const room_id = this.getRoom(roomId)
+                
         switch (room_id) {
             case -1 : {
                 return{
@@ -65,6 +67,8 @@ export class RoomManager {
                   }),
                 );
 
+
+                //Send offer if not isInitiator
                 !isInitiator && room.forEach((user_id) => {
                   if (user_id !== userId) {
                     console.log("found receiver")
@@ -83,6 +87,8 @@ export class RoomManager {
                     );
                   }
                 });
+
+                //Send ICE Candidates
                 room.forEach((user_id) => {
                     if (user_id != userId) {
                         //@ts-ignore
@@ -101,7 +107,8 @@ export class RoomManager {
                             )
                         }
                     }
-                });          
+                });
+                return { userId, roomId: room_id }
             }
         }
     }
@@ -155,12 +162,20 @@ export class RoomManager {
 
     remove(roomId: string, userId: string) {
         let room = this.rooms.get(roomId)
-        room = room?.filter(userid => userid!=userId)
-        if (!room) {
+        if (!room) return
+        room = room.filter(userid => userid !== userId)
+        if (room.length === 0) {
             this.rooms.delete(roomId)
-            return
+        } else {
+            this.rooms.set(roomId, room)
+            room.forEach(remainingUserId => {
+                const user = this.users.getUser(remainingUserId)
+                user?.ws.send(JSON.stringify({
+                    type: "peer-left",
+                    data: { userId }
+                }))
+            })
         }
-        this.rooms.set(roomId, room)
         this.users.remove(userId)
     }
 
